@@ -55,8 +55,8 @@ ASCII_ART = f"""{DRED}
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⠀⣿⣿⣿⣿⠀⣿⣿⣿⡇⢸⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⠀⣿⣿⣿⣿⠀⣿⣿⣿⡇⢸⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠀⣿⣿⣿⡿⠀⣿⣿⣿⡇⢸⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠀⣿⣿⣿⡇⠀⣿⣿⣿⠇⢸⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⠀⢻⣿⣿⡇⠀⣿⣿⣿⠀⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠀⣿⣿⣿⡇⠀⣿⣿⣿⠇⢸⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⠀⢻⣿⣿⡇⠀⣿⣿⣿⠀⢸⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠻⠋⠀⠸⣿⣿⠇⠀⢿⣿⠏⠀⠸⠿⠿⠿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 {RESET}"""
 
@@ -107,8 +107,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
 
 
 async def exchange_code(code: str):
-    # استبدل الرابط أدناه برابط Railway الخاص بك لاحقاً بعد توليده
-    redirect_uri = os.environ.get("REDIRECT_URI", "https://YOUR-RAILWAY-APP.up.railway.app/callback")
+    redirect_uri = os.environ.get("RENDER_EXTERNAL_URL", "https://your-app.onrender.com") + "/callback"
     data = {
         "client_id":     CONFIG["client_id"],
         "client_secret": CONFIG["client_secret"],
@@ -233,7 +232,8 @@ async def refresh_loop():
 
 
 def build_auth_url() -> str:
-    redirect_uri = os.environ.get("REDIRECT_URI", "https://YOUR-RAILWAY-APP.up.railway.app/callback")
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://your-app.onrender.com")
+    redirect_uri = f"{base_url}/callback"
     params = {
         "client_id":     CONFIG["client_id"],
         "redirect_uri":  redirect_uri,
@@ -246,15 +246,9 @@ def build_auth_url() -> str:
 
 
 def run_server():
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), OAuthCallbackHandler)
     server.serve_forever()
-
-
-def prompt(label: str) -> str:
-    sys.stdout.write(f"{BOLD}{RED}{label}: {RESET}")
-    sys.stdout.flush()
-    return input()
 
 
 async def main():
@@ -268,11 +262,17 @@ async def main():
     print()
     time.sleep(0.8)
 
-    CONFIG["bot_token"]     = prompt("Enter Token")
-    CONFIG["client_id"]     = prompt("Enter Client ID")
-    CONFIG["client_secret"] = prompt("Enter Client Secret")
-    CONFIG["webhook"]       = prompt("Enter Webhook")
-    print()
+    # سحب المتغيرات من إعدادات البيئة تلقائياً بدون إدخال يدوي
+    CONFIG["bot_token"]     = os.environ.get("bot_token", "")
+    CONFIG["client_id"]     = os.environ.get("client_id", "")
+    CONFIG["client_secret"] = os.environ.get("client_secret", "")
+    CONFIG["webhook"]       = os.environ.get("webhook", "")
+
+    if not CONFIG["client_id"] or not CONFIG["webhook"]:
+        print(f"{RED}[!] Error: Missing required environment variables.{RESET}")
+        return
+
+    print(f"{RED}[+] Configuration loaded successfully from environment variables.{RESET}\n")
 
     threading.Thread(target=run_server, daemon=True).start()
 
@@ -280,10 +280,7 @@ async def main():
     print(f"{BOLD}{RED}[+] Authorization Link:{RESET}")
     print(f"{DRED}    {auth_url}{RESET}")
     print()
-    type_print("[*] Opening in browser...", delay=0.02)
-    webbrowser.open(auth_url)
-
-    print(f"{DIM}{RED}[*] Waiting for authorization... (Ctrl+C to stop){RESET}")
+    print(f"{DIM}{RED}[*] Server is running & waiting for authorization...{RESET}")
     print()
 
     await refresh_loop()
